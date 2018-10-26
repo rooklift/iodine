@@ -1,0 +1,7 @@
+{
+	"engine": "./dubnium.exe",
+	"bots": [
+		"./bot.exe",
+		"./bot.exe"
+	]
+}

@@ -293,7 +293,21 @@ function make_renderer() {
 
 	renderer.go = () => {
 
-		let exe = child_process.spawn("dubnium.exe", ["--viewer", "--width", "64", "--height", "64", "bot.exe", "bot.exe", "bot.exe", "bot.exe"]);
+		let settings;
+
+		try {
+			let f = fs.readFileSync("settings.json");
+			settings = JSON.parse(f);
+		} catch (err) {
+			console.log("Couldn't load settings: ", err.message);
+		}
+
+		let engine = settings.engine;
+		let bots = settings.bots;
+
+		let args = ["--viewer"].concat(bots);
+
+		let exe = child_process.spawn(engine, args);
 
 		let scanner = readline.createInterface({
 			input: exe.stdout,
