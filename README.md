@@ -6,3 +6,5 @@
 * Configure the viewer in `settings.json`
 * Run the viewer with `electron .`
 * Tell me if it works.
+
+![Iodine Screenshot](https://user-images.githubusercontent.com/16438795/47583947-c1647f00-d950-11e8-886a-ef63883642af.png)
