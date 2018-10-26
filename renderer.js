@@ -323,13 +323,17 @@ function make_renderer() {
 
 	// --------------------------------------------------------------
 
-	renderer.go = () => {
+	renderer.go = (args) => {
+
+		// Note: our own process has already been stripped from args.
+
+		console.log("Got args: ", args.join(" "));
 
 		let settings;
 
-		if (fs.existsSync("settings.json")) {
+		if (fs.existsSync(path.join(__dirname, "settings.json"))) {
 			try {
-				let f = fs.readFileSync("settings.json");
+				let f = fs.readFileSync(path.join(__dirname, "settings.json"));
 				settings = JSON.parse(f);
 			} catch (err) {
 				console.log("Couldn't load settings: ", err.message);
@@ -337,7 +341,7 @@ function make_renderer() {
 			}
 		} else {
 			try {
-				let f = fs.readFileSync("settings.json.example");
+				let f = fs.readFileSync(path.join(__dirname, "settings.json.example"));
 				settings = JSON.parse(f);
 			} catch (err) {
 				console.log("Couldn't load settings: ", err.message);
@@ -345,31 +349,12 @@ function make_renderer() {
 			}
 		}
 
-		let args = ["--viewer"];
+		args = ["--viewer"].concat(args);
 
-		if (settings.seed !== undefined && settings.seed !== null) {
-			args.push("-s");
-			args.push(settings.seed.toString());
-		}
-
-		if (settings.sleep !== undefined && settings.sleep !== null && settings.sleep > 0) {
+		if (settings.sleep && settings.sleep > 0) {
 			args.push("--sleep");
 			args.push(settings.sleep.toString());
 		}
-
-		if (settings.size !== undefined && settings.size !== null) {
-			args.push("--width");
-			args.push(settings.size.toString());
-			args.push("--height");
-			args.push(settings.size.toString());
-		}
-
-		if (settings.replays !== undefined && settings.replays !== null && settings.replays !== "") {
-			args.push("-i");
-			args.push(settings.replays);
-		}
-
-		args = args.concat(settings.bots);
 
 		let exe = child_process.spawn(settings.engine, args);
 
@@ -638,6 +623,10 @@ ipcRenderer.on("receive", (event, msg) => {
 	tp.receive(msg);
 });
 
+ipcRenderer.on("go", (event, args) => {
+	renderer.go(args);
+});
+
 renderer.clear();
 
 // Give the window and canvas a little time to settle... (may prevent sudden jerk during load).
@@ -646,4 +635,3 @@ setTimeout(() => {
 	ipcRenderer.send("renderer_ready", null);
 }, 200);
 
-renderer.go();

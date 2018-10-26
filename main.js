@@ -45,3 +45,18 @@ electron.app.on("ready", () => {
 electron.app.on("window-all-closed", () => {
 	electron.app.quit();
 });
+
+// -------------------------------------------------------
+
+ipcMain.on("renderer_ready", () => {
+
+	let args;
+
+	if (process.defaultApp) {		// Launched as "electron ." or similar
+		args = process.argv.slice(2)
+	} else {						// Launched as built app
+		args = process.argv.slice(1)
+	}
+
+	windows.send("renderer", "go", args);
+});
