@@ -2,6 +2,12 @@
 	"engine": "./dubnium.exe",
 	"bots": [
 		"./bot.exe",
-		"./bot.exe"
-	]
+		"./bot.exe",
+		"./bot.exe",
+		"python do_nothing_bot.py"
+	],
+	"seed": 0,
+	"size": null,
+
+	"note": "You can make seed or size null to use the engine's own seed or random size."
 }

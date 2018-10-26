@@ -304,8 +304,24 @@ function make_renderer() {
 
 		let engine = settings.engine;
 		let bots = settings.bots;
+		let seed = settings.seed;
+		let size = settings.size;
 
-		let args = ["--viewer"].concat(bots);
+		let args = ["--viewer"];
+
+		if (seed !== undefined && seed !== null) {
+			args.push("-s");
+			args.push(seed.toString());
+		}
+
+		if (size !== undefined && size !== null) {
+			args.push("--width");
+			args.push(size.toString());
+			args.push("--height");
+			args.push(size.toString());
+		}
+
+		args = args.concat(bots);
 
 		let exe = child_process.spawn(engine, args);
 
