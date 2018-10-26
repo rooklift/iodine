@@ -326,34 +326,33 @@ function make_renderer() {
 			}
 		}
 
-		let engine = settings.engine;
-		let bots = settings.bots;
-		let seed = settings.seed;
-		let size = settings.size;
-		let replays = settings.replays;
-
 		let args = ["--viewer"];
 
-		if (seed !== undefined && seed !== null) {
+		if (settings.seed !== undefined && settings.seed !== null) {
 			args.push("-s");
-			args.push(seed.toString());
+			args.push(settings.seed.toString());
 		}
 
-		if (size !== undefined && size !== null) {
+		if (settings.sleep !== undefined && settings.sleep !== null && settings.sleep > 0) {
+			args.push("--sleep");
+			args.push(settings.sleep.toString());
+		}
+
+		if (settings.size !== undefined && settings.size !== null) {
 			args.push("--width");
-			args.push(size.toString());
+			args.push(settings.size.toString());
 			args.push("--height");
-			args.push(size.toString());
+			args.push(settings.size.toString());
 		}
 
-		if (replays !== undefined && replays !== null && replays !== "") {
+		if (settings.replays !== undefined && settings.replays !== null && settings.replays !== "") {
 			args.push("-i");
-			args.push(replays);
+			args.push(settings.replays);
 		}
 
-		args = args.concat(bots);
+		args = args.concat(settings.bots);
 
-		let exe = child_process.spawn(engine, args);
+		let exe = child_process.spawn(settings.engine, args);
 
 		let scanner = readline.createInterface({
 			input: exe.stdout,
