@@ -5,3 +5,4 @@
 * You will need Electron.
 * Configure the viewer in `settings.json`
 * Run the viewer with `electron .`
+* Tell me if it works.
