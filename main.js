@@ -40,6 +40,8 @@ electron.app.on("ready", () => {
 	});
 });
 
+// -------------------------------------------------------
+
 electron.app.on("window-all-closed", () => {
 	electron.app.quit();
 });

@@ -1,6 +1,7 @@
 "use strict";
 
 const app = require("electron").remote.app;
+const child_process = require("child_process");
 const fs = require("fs");
 const ipcRenderer = require("electron").ipcRenderer;
 const path = require("path");
@@ -14,23 +15,16 @@ const canvas = document.getElementById("canvas");
 const infobox = document.getElementById("infobox");
 const context = canvas.getContext("2d");
 
-let tp;
-
 function make_token_parser() {
 
 	let o = Object.create(null);
 
 	let tokens = [];		// Private
 
-	let scanner = readline.createInterface({
-		input: process.stdin,
-  		output: null,
-	});
-
-	scanner.on("line", (line) => {
-		let new_tokens = line.split(" ").trim().filter(t => t.length > 0);
+	o.receive = (line) => {
+		let new_tokens = line.split(" ").map(s => s.trim()).filter(t => t.length > 0);
 		tokens = tokens.concat(new_tokens);
-	});
+	};
 
 	o.count = () => {
 		return tokens.length;
@@ -47,7 +41,6 @@ function make_token_parser() {
 	o.peek_int = (n) => {
 		return parseInt(tokens[n], 10);
 	};
-
 
 	return o;
 }
@@ -89,6 +82,7 @@ function make_game() {
 
 	game.init_map = () => {
 		game.halite = [];
+		console.log(`Making map : ${game.width} ${game.height}`);
 		for (let x = 0; x < game.width; x++) {
 			game.halite.push([]);
 			for (let y = 0; y < game.height; y++) {
@@ -172,7 +166,7 @@ function make_renderer() {
 
 	renderer.parse_map = () => {
 
-		let tokens_needed = width * height;
+		let tokens_needed = game.width * game.height;
 
 		if (tp.count() < tokens_needed) {
 			setTimeout(renderer.parse_map, 1);
@@ -296,6 +290,25 @@ function make_renderer() {
 
 	// --------------------------------------------------------------
 
+	renderer.go = () => {
+
+		let exe = child_process.spawn("dubnium.exe", ["-u", "bot.exe"]);
+
+		let scanner = readline.createInterface({
+			input: exe.stdout,
+			output: undefined,
+			terminal: false			// What is this?
+		});
+
+		scanner.on("line", (line) => {
+			tp.receive(line.toString());
+		});
+
+		setTimeout(renderer.get_json_line, 0);
+	}
+
+	// --------------------------------------------------------------
+
 	renderer.right = (n) => {
 		renderer.offset_x += n;
 		renderer.draw();
@@ -365,202 +378,11 @@ function make_renderer() {
 
 		renderer.clear();
 
-		if (!renderer.game) {
+		if (!renderer.game || !renderer.game.clean) {
 			return;
 		}
 
-		renderer.draw_grid();
-		renderer.draw_structures();
-		renderer.draw_ships();
-		renderer.draw_collisions();
-		renderer.draw_selection_crosshairs();
-
 		renderer.write_infobox();
-	};
-
-	renderer.draw_grid = () => {
-
-		let box_width = renderer.box_width();
-		let box_height = renderer.box_height();
-
-		let turn_fudge = renderer.prefs.turns_start_at_one ? 1 : 0;
-
-		for (let x = 0; x < renderer.width; x++) {
-
-			for (let y = 0; y < renderer.height; y++) {
-
-				let colour;
-
-				if (renderer.flog_colours) {
-					let key = `${renderer.turn + turn_fudge}-${x}-${y}`;
-					colour = renderer.flog_colours[key];
-				}
-
-				if (colour === undefined) {
-					let val;
-
-					switch (renderer.prefs.grid_aesthetic) {
-						case 0:
-							val = 0;
-							break;
-						case 1:
-							val = renderer.production_list[renderer.turn][x][y] / 4;
-							break;
-						case 2:
-							val = 255 * Math.sqrt(renderer.production_list[renderer.turn][x][y] / 2048);
-							break;
-						case 3:
-							val = 255 * Math.sqrt(renderer.production_list[renderer.turn][x][y] / 1024);
-							break;
-					}
-
-					val = Math.floor(val);
-					val = Math.min(255, val);
-					colour = `rgb(${val},${val},${val})`;
-				}
-
-				context.fillStyle = colour;
-
-				let [i, j] = renderer.offset_adjust(x, y);
-				context.fillRect(i * box_width, j * box_height, box_width, box_height);
-			}
-		}
-	};
-
-	renderer.draw_structures = () => {
-
-		let box_width = renderer.box_width();
-		let box_height = renderer.box_height();
-
-		for (let pid = 0; pid < renderer.players(); pid++) {
-
-			let x = renderer.game.players[pid].factory_location.x;
-			let y = renderer.game.players[pid].factory_location.y;
-
-			context.fillStyle = colours[pid];
-			let [i, j] = renderer.offset_adjust(x, y);
-			context.fillRect(i * box_width, j * box_height, box_width, box_height);
-		}
-
-		for (let n = 0; n < renderer.dropoff_list.length; n++) {
-
-			if (renderer.dropoff_list[n].turn > renderer.turn) {
-				continue;
-			}
-
-			let x = renderer.dropoff_list[n].x;
-			let y = renderer.dropoff_list[n].y;
-			let pid = renderer.dropoff_list[n].pid;
-
-			context.fillStyle = colours[pid];
-			let [i, j] = renderer.offset_adjust(x, y);
-			context.fillRect(i * box_width, j * box_height, box_width, box_height);
-		}
-	};
-
-	renderer.draw_ships = () => {
-
-		let box_width = renderer.box_width();
-		let box_height = renderer.box_height();
-		let frame = renderer.current_frame();
-
-		let moves_map = renderer.get_moves_map(renderer.prefs.triangles_show_next);
-
-		for (let pid = 0; pid < renderer.players(); pid++) {
-
-			let colour = colours[pid];
-
-			let some_ships = frame.entities[pid];
-
-			if (some_ships === undefined) {
-				continue;
-			}
-
-			for (let [sid, ship] of Object.entries(some_ships)) {
-
-				let x = ship.x;
-				let y = ship.y;
-
-				let opacity = ship.energy / renderer.game.GAME_CONSTANTS.MAX_ENERGY;
-
-				context.strokeStyle = colour;
-
-				let [i, j] = renderer.offset_adjust(x, y);
-
-				let a = 0.1;
-				let b = 0.5;
-				let c = 1 - a;
-
-				switch (moves_map[sid]) {
-					case "n":
-						context.beginPath();
-						context.moveTo((i + a) * box_width, (j + c) * box_height);
-						context.lineTo((i + c) * box_width, (j + c) * box_height);
-						context.lineTo((i + b) * box_width, (j + a) * box_height);
-						context.closePath();
-						context.fillStyle = "#000000";
-						context.fill();
-						context.globalAlpha = opacity;
-						context.fillStyle = colour;
-						context.fill();
-						context.globalAlpha = 1;
-						context.stroke();
-						break;
-					case "s":
-						context.beginPath();
-						context.moveTo((i + a) * box_width, (j + a) * box_height);
-						context.lineTo((i + c) * box_width, (j + a) * box_height);
-						context.lineTo((i + b) * box_width, (j + c) * box_height);
-						context.closePath();
-						context.fillStyle = "#000000";
-						context.fill();
-						context.globalAlpha = opacity;
-						context.fillStyle = colour;
-						context.fill();
-						context.globalAlpha = 1;
-						context.stroke();
-						break;
-					case "e":
-						context.beginPath();
-						context.moveTo((i + a) * box_width, (j + a) * box_height);
-						context.lineTo((i + a) * box_width, (j + c) * box_height);
-						context.lineTo((i + c) * box_width, (j + b) * box_height);
-						context.closePath();
-						context.fillStyle = "#000000";
-						context.fill();
-						context.globalAlpha = opacity;
-						context.fillStyle = colour;
-						context.fill();
-						context.globalAlpha = 1;
-						context.stroke();
-						break;
-					case "w":
-						context.beginPath();
-						context.moveTo((i + c) * box_width, (j + a) * box_height);
-						context.lineTo((i + c) * box_width, (j + c) * box_height);
-						context.lineTo((i + a) * box_width, (j + b) * box_height);
-						context.closePath();
-						context.fillStyle = "#000000";
-						context.fill();
-						context.globalAlpha = opacity;
-						context.fillStyle = colour;
-						context.fill();
-						context.globalAlpha = 1;
-						context.stroke();
-						break;
-					default:
-						context.beginPath();
-						context.arc((i + b) * box_width, (j + b) * box_height, 0.35 * box_width, 0, 2 * Math.PI, false);
-						context.fillStyle = "#000000";
-						context.fill();
-						context.globalAlpha = opacity;
-						context.fillStyle = colour;
-						context.fill();
-						context.globalAlpha = 1;
-						context.stroke();
-				}
-			}
-		}
 	};
 
 	renderer.box_width = () => {
@@ -584,6 +406,7 @@ function make_renderer() {
 	return renderer;
 }
 
+let tp = make_token_parser();
 let renderer = make_renderer();
 
 ipcRenderer.on("right", (event, n) => {
@@ -606,6 +429,10 @@ ipcRenderer.on("log", (event, msg) => {
 	console.log(msg);
 });
 
+ipcRenderer.on("receive", (event, msg) => {
+	tp.receive(msg);
+});
+
 renderer.clear();
 
 // Give the window and canvas a little time to settle... (may prevent sudden jerk during load).
@@ -613,3 +440,5 @@ renderer.clear();
 setTimeout(() => {
 	ipcRenderer.send("renderer_ready", null);
 }, 200);
+
+renderer.go();
