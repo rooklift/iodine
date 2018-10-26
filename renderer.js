@@ -80,6 +80,7 @@ function make_game() {
 	game.height = null;
 	game.turn = null;
 
+	game.constants = Object.create(null);
 	game.ships = Object.create(null);
 	game.dropoffs = Object.create(null);
 	game.halite = null;
@@ -135,7 +136,8 @@ function make_renderer() {
 			return;
 		}
 
-		tp.token()
+		let raw = tp.token();
+		renderer.game.constants = JSON.parse(raw);
 
 		renderer.pre_parse();
 	};
@@ -657,8 +659,10 @@ function make_renderer() {
 		let lines = [];
 
 		let turn_fudge = renderer.prefs.turns_start_at_one ? 1 : 0;
+		let max_turns = renderer.game.constants.MAX_TURNS;
 
-		lines.push(`<p class="lowlight">Turn ${renderer.game.turn + turn_fudge}</p>`);
+		lines.push(`<p class="lowlight">Seed ${renderer.game.constants.game_seed}</p>`);
+		lines.push(`<p class="lowlight">Turn <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
 
 		for (let pid = 0; pid < renderer.game.players; pid++) {
 
