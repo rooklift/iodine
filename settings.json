@@ -1,13 +1,15 @@
 {
-	"engine": "./dubnium.exe",
+	"engine": "C:\\Users\\Owner\\github\\dubnium\\dubnium.exe",
 	"bots": [
-		"./bot.exe",
-		"./bot.exe",
-		"./bot.exe",
-		"python do_nothing_bot.py"
+		"C:\\Users\\Owner\\Desktop\\halite3\\bot.exe",
+		"C:\\Users\\Owner\\Desktop\\halite3\\bot.exe",
+		"C:\\Users\\Owner\\Desktop\\halite3\\bot.exe",
+		"C:\\Users\\Owner\\Desktop\\halite3\\bot.exe"
 	],
-	"seed": 0,
+	"replays": "C:\\Users\\Owner\\github\\iodine\\replays",
+	"seed": null,
 	"size": null,
+
 
 	"note": "You can make seed or size null to use the engine's own seed or random size."
 }
