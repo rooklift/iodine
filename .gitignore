@@ -6,3 +6,4 @@ dist/
 *.txt
 flogs/*
 logs/*
+settings.json
