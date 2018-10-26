@@ -51,6 +51,7 @@ function make_dropoff(pid, x, y, factory_flag) {
 	dropoff.x = x;
 	dropoff.y = y;
 	dropoff.factory = factory_flag;
+	return dropoff;
 }
 
 function make_ship(pid, sid, x, y, halite) {
@@ -292,7 +293,7 @@ function make_renderer() {
 
 	renderer.go = () => {
 
-		let exe = child_process.spawn("dubnium.exe", ["--viewer", "bot.exe"]);
+		let exe = child_process.spawn("dubnium.exe", ["--viewer", "--width", "64", "--height", "64", "bot.exe", "bot.exe", "bot.exe", "bot.exe"]);
 
 		let scanner = readline.createInterface({
 			input: exe.stdout,
@@ -383,6 +384,8 @@ function make_renderer() {
 		}
 
 		renderer.draw_grid();
+		renderer.draw_structures();
+		renderer.draw_ships();
 
 		renderer.write_infobox();
 	};
@@ -421,6 +424,56 @@ function make_renderer() {
 				let [i, j] = renderer.offset_adjust(x, y);
 				context.fillRect(i * box_width, j * box_height, box_width, box_height);
 			}
+		}
+	};
+
+	renderer.draw_structures = () => {
+
+		let box_width = renderer.box_width();
+		let box_height = renderer.box_height();
+
+		for (let dropoff of renderer.game.dropoffs) {
+
+			let x = dropoff.x;
+			let y = dropoff.y;
+			let pid = dropoff.pid;
+
+			context.fillStyle = colours[pid];
+			let [i, j] = renderer.offset_adjust(x, y);
+			context.fillRect(i * box_width, j * box_height, box_width, box_height);
+		}
+	};
+
+	renderer.draw_ships = () => {
+
+		let box_width = renderer.box_width();
+		let box_height = renderer.box_height();
+
+		for (let ship of renderer.game.ships) {
+
+			let pid = ship.pid;
+			let x = ship.x;
+			let y = ship.y;
+
+			let colour = colours[pid];
+			let opacity = ship.halite / 1000;
+
+			let [i, j] = renderer.offset_adjust(x, y);
+
+			let a = 0.1;
+			let b = 0.5;
+			let c = 1 - a;
+
+			context.strokeStyle = colour;
+			context.beginPath();
+			context.arc((i + b) * box_width, (j + b) * box_height, 0.35 * box_width, 0, 2 * Math.PI, false);
+			context.fillStyle = "#000000";
+			context.fill();
+			context.globalAlpha = opacity;
+			context.fillStyle = colour;
+			context.fill();
+			context.globalAlpha = 1;
+			context.stroke();
 		}
 	};
 
