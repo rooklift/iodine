@@ -31,8 +31,8 @@ exports.read_prefs = (app) => {
         let f = fs.readFileSync(filename, "utf8");
         return Object.assign(prefs, JSON.parse(f));
     } catch (err) {
-        console.log("Couldn't read preferences: ", err.message);
-        console.log("Continuing with default preferences...");
+        // console.log("Couldn't read preferences: ", err.message);
+        // console.log("Continuing with default preferences...");
         return prefs;
     }
 }

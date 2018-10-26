@@ -1,0 +1,22 @@
+{
+	"engine": "./dubnium.exe",
+	"bots": [
+		"python ./somebot.py",
+		"./compiled_bot.exe"
+	],
+	"replays": "./replay_folder",
+	"seed": null,
+	"size": 64,
+	"sleep": 0,
+
+
+	"solutions_to_problems": [
+		"Check the dev console for error messages",
+		"Paths are fiddly, if in doubt use absolute paths",
+		"Remember to escape your \\ characters in Windows paths",
+		"You can make seed or size null to use the engine's defaults (i.e. randomised)",
+		"If your bot is so fast Iodine can't keep up, make sleep something like 200",
+		"If your bot won't start, check the file permissions on the folder so it can write its logs",
+		"Make sure you run the most recent version of dubnium"
+	]
+}

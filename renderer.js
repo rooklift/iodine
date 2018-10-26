@@ -308,11 +308,22 @@ function make_renderer() {
 
 		let settings;
 
-		try {
-			let f = fs.readFileSync("settings.json");
-			settings = JSON.parse(f);
-		} catch (err) {
-			console.log("Couldn't load settings: ", err.message);
+		if (fs.existsSync("settings.json")) {
+			try {
+				let f = fs.readFileSync("settings.json");
+				settings = JSON.parse(f);
+			} catch (err) {
+				console.log("Couldn't load settings: ", err.message);
+				return;		// i.e. fail to start.
+			}
+		} else {
+			try {
+				let f = fs.readFileSync("settings.json.example");
+				settings = JSON.parse(f);
+			} catch (err) {
+				console.log("Couldn't load settings: ", err.message);
+				return;		// i.e. fail to start.
+			}
 		}
 
 		let engine = settings.engine;
@@ -350,8 +361,18 @@ function make_renderer() {
 			terminal: false			// What is this?
 		});
 
+		let stderr_scanner = readline.createInterface({
+			input: exe.stderr,
+			output: undefined,
+			terminal: false
+		});
+
 		scanner.on("line", (line) => {
 			tp.receive(line.toString());
+		});
+
+		stderr_scanner.on("line", (line) => {
+			console.log("engine: ", line);
 		});
 
 		setTimeout(renderer.get_json_line, 0);
