@@ -32,7 +32,7 @@ function set_pref(attrname, value) {
 electron.app.on("ready", () => {
 
 	let main = windows.new("renderer", {
-		title: "Iodine", show: false, width: 1150, height: 800, resizable: true, page: path.join(__dirname, "renderer.html")
+		title: "Iodine", show: false, width: 800, height: 800, resizable: true, page: path.join(__dirname, "renderer.html")
 	});
 
 	main.once("ready-to-show", () => {
