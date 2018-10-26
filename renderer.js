@@ -97,7 +97,7 @@ function make_game() {
 function make_renderer() {
 
 	let renderer = Object.create(null);
-	let game = make_game();
+	renderer.game = make_game();
 
 	renderer.offset_x = 0;
 	renderer.offset_y = 0;
@@ -125,27 +125,27 @@ function make_renderer() {
 			return;
 		}
 
-		game.players = tp.int();
-		game.pid = tp.int();
+		renderer.game.players = tp.int();
+		renderer.game.pid = tp.int();
 
 		renderer.parse_factories();
 	};
 
 	renderer.parse_factories = () => {
 
-		let tokens_needed = game.players * 3;
+		let tokens_needed = renderer.game.players * 3;
 
 		if (tp.count() < tokens_needed) {
 			setTimeout(renderer.parse_factories, 1);
 			return;
 		}
 
-		for (let n = 0; n < game.players; n++) {
+		for (let n = 0; n < renderer.game.players; n++) {
 			let pid = tp.int();
 			let x = tp.int();
 			let y = tp.int();
 			let factory = make_dropoff(pid, x, y, true);
-			game.dropoffs.push(factory);
+			renderer.game.dropoffs.push(factory);
 		}
 
 		renderer.parse_width_height();
@@ -158,26 +158,26 @@ function make_renderer() {
 			return;
 		}
 
-		game.width = tp.int();
-		game.height = tp.int();
+		renderer.game.width = tp.int();
+		renderer.game.height = tp.int();
 
 		renderer.parse_map();
 	};
 
 	renderer.parse_map = () => {
 
-		let tokens_needed = game.width * game.height;
+		let tokens_needed = renderer.game.width * renderer.game.height;
 
 		if (tp.count() < tokens_needed) {
 			setTimeout(renderer.parse_map, 1);
 			return;
 		}
 
-		game.init_map();
+		renderer.game.init_map();
 
-		for (let y = 0; y < game.height; y++) {
-			for (let x = 0; x < game.width; x++) {
-				game.halite[x][y] = tp.int();
+		for (let y = 0; y < renderer.game.height; y++) {
+			for (let x = 0; x < renderer.game.width; x++) {
+				renderer.game.halite[x][y] = tp.int();
 			}
 		}
 
@@ -192,7 +192,7 @@ function make_renderer() {
 		// of tokens that might be capable of forming the frame, given
 		// what we actually know. It is updated as we gain more info.
 
-		let bare_min_tokens_needed = 1 + (game.players * 4) + 1;
+		let bare_min_tokens_needed = 1 + (renderer.game.players * 4) + 1;
 
 		if (tp.count() < bare_min_tokens_needed) {
 			setTimeout(renderer.loop, 1);
@@ -203,7 +203,7 @@ function make_renderer() {
 
 		let info_index = 1;
 
-		for (let z = 0; z < game.players; z++) {
+		for (let z = 0; z < renderer.game.players; z++) {
 
 			let pid = tp.peek_int(info_index + 0);
 			let ships = tp.peek_int(info_index + 1);
@@ -235,20 +235,20 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
-		game.ships = [];
+		renderer.game.ships = [];
 
 		// Clear the dropoffs but save the factories...
-		game.dropoffs = game.dropoffs.slice(0, game.players);
+		renderer.game.dropoffs = renderer.game.dropoffs.slice(0, renderer.game.players);
 
-		game.turn = tp.int();
+		renderer.game.turn = tp.int();
 
-		for (let n = 0; n < game.players; n++) {
+		for (let n = 0; n < renderer.game.players; n++) {
 
 			let pid = tp.int();
 			let ships = tp.int();
 			let dropoffs = tp.int();
 
-			game.budgets[pid] = tp.int();
+			renderer.game.budgets[pid] = tp.int();
 
 			for (let i = 0; i < ships; i++) {
 
@@ -257,7 +257,7 @@ function make_renderer() {
 				let y = tp.int();
 				let halite = tp.int();
 
-				game.ships.push(make_ship(pid, sid, x, y, halite));
+				renderer.game.ships.push(make_ship(pid, sid, x, y, halite));
 			}
 
 			for (let i = 0; i < dropoffs; i++) {
@@ -266,7 +266,7 @@ function make_renderer() {
 				let x = tp.int();
 				let y = tp.int();
 
-				game.dropoffs.push(make_dropoff(pid, x, y));
+				renderer.game.dropoffs.push(make_dropoff(pid, x, y));
 			}
 		}
 
@@ -278,21 +278,21 @@ function make_renderer() {
 			let y = tp.int();
 			let val = tp.int();
 
-			game.halite[x][y] = val;
+			renderer.game.halite[x][y] = val;
 		}
 
-		console.log(`Finished reading turn ${game.turn}`);
+		renderer.game.clean = true;
 
-		game.clean = true;
+		renderer.draw()
 
-		// FIXME: setTimeout for self
+		setTimeout(renderer.loop, 1);
 	};
 
 	// --------------------------------------------------------------
 
 	renderer.go = () => {
 
-		let exe = child_process.spawn("dubnium.exe", ["-u", "bot.exe"]);
+		let exe = child_process.spawn("dubnium.exe", ["--viewer", "bot.exe"]);
 
 		let scanner = readline.createInterface({
 			input: exe.stdout,
@@ -343,8 +343,8 @@ function make_renderer() {
 		// Sneaky modulo method which works for negative numbers too...
 		// https://dev.to/maurobringolf/a-neat-trick-to-compute-modulo-of-negative-numbers-111e
 
-		x = (x % renderer.width + renderer.width) % renderer.width;
-		y = (y % renderer.height + renderer.height) % renderer.height;
+		x = (x % renderer.game.width + renderer.game.width) % renderer.game.width;
+		y = (y % renderer.game.height + renderer.game.height) % renderer.game.height;
 
 		return [x, y];
 	};
@@ -361,9 +361,9 @@ function make_renderer() {
 		let desired_size;
 
 		if (!renderer.prefs.integer_box_sizes) {
-			desired_size = Math.max(1 * renderer.height, window.innerHeight - 1);
+			desired_size = Math.max(1 * renderer.game.height, window.innerHeight - 1);
 		} else {
-			desired_size = renderer.height * Math.max(1, Math.floor((window.innerHeight - 1) / renderer.height));
+			desired_size = renderer.game.height * Math.max(1, Math.floor((window.innerHeight - 1) / renderer.game.height));
 		}
 
 		if (desired_size !== canvas.width || desired_size !== canvas.height) {
@@ -382,17 +382,56 @@ function make_renderer() {
 			return;
 		}
 
+		renderer.draw_grid();
+
 		renderer.write_infobox();
 	};
 
+	renderer.draw_grid = () => {
+
+		let box_width = renderer.box_width();
+		let box_height = renderer.box_height();
+
+		for (let x = 0; x < renderer.game.width; x++) {
+
+			for (let y = 0; y < renderer.game.height; y++) {
+
+				let val;
+
+				switch (renderer.prefs.grid_aesthetic) {
+					case 0:
+						val = 0;
+						break;
+					case 1:
+						val = renderer.game.halite[x][y] / 4;
+						break;
+					case 2:
+						val = 255 * Math.sqrt(renderer.game.halite[x][y] / 2048);
+						break;
+					case 3:
+						val = 255 * Math.sqrt(renderer.game.halite[x][y] / 1024);
+						break;
+				}
+
+				val = Math.floor(val);
+				val = Math.min(255, val);
+
+				context.fillStyle = `rgb(${val},${val},${val})`;
+
+				let [i, j] = renderer.offset_adjust(x, y);
+				context.fillRect(i * box_width, j * box_height, box_width, box_height);
+			}
+		}
+	};
+
 	renderer.box_width = () => {
-		if (renderer.width <= 0) return 1;
-		return Math.max(1, canvas.width / renderer.width);
+		if (renderer.game.width <= 0) return 1;
+		return Math.max(1, canvas.width / renderer.game.width);
 	};
 
 	renderer.box_height = () => {
-		if (renderer.height <= 0) return 1;
-		return Math.max(1, canvas.height / renderer.height);
+		if (renderer.game.height <= 0) return 1;
+		return Math.max(1, canvas.height / renderer.game.height);
 	};
 
 	// --------------------------------------------------------------
