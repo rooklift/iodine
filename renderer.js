@@ -9,6 +9,7 @@ const read_prefs = require("./modules/preferences").read_prefs;
 const readline = require("readline");
 
 const colours = ["#c5ec98", "#ff9999", "#ffbe00", "#66cccc"];
+const names = ["Zero", "One", "Two", "Three"];
 const explosion_colour = "#ff0000";
 
 const canvas = document.getElementById("canvas");
@@ -61,6 +62,7 @@ function make_ship(pid, sid, x, y, halite) {
 	ship.x = x;
 	ship.y = y;
 	ship.halite = halite;
+	ship.last_move = "";
 	return ship;
 }
 
@@ -76,19 +78,34 @@ function make_game() {
 	game.height = null;
 	game.turn = null;
 
-	game.budgets = Object.create(null);
 	game.ships = [];
 	game.dropoffs = [];
 	game.halite = null;
 
-	game.init_map = () => {
+	game.init = () => {
+
 		game.halite = [];
-		console.log(`Making map : ${game.width} ${game.height}`);
+
 		for (let x = 0; x < game.width; x++) {
 			game.halite.push([]);
 			for (let y = 0; y < game.height; y++) {
 				game.halite[x].push(0);
 			}
+		}
+
+		game.reset_stats();
+	}
+
+	game.reset_stats = () => {
+
+		game.budgets = [];
+		game.shipcounts = [];
+		game.carried = [];
+
+		for (let pid = 0; pid < game.players; pid++) {
+			game.budgets.push(0);
+			game.shipcounts.push(0);
+			game.carried.push(0);
 		}
 	}
 
@@ -176,7 +193,7 @@ function make_renderer() {
 			return;
 		}
 
-		renderer.game.init_map();
+		renderer.game.init();
 
 		for (let y = 0; y < renderer.game.height; y++) {
 			for (let x = 0; x < renderer.game.width; x++) {
@@ -204,11 +221,10 @@ function make_renderer() {
 
 		// --------------------
 
-		let info_index = 1;
+		let info_index = 1;		// Start of the first player in the stream.
 
 		for (let z = 0; z < renderer.game.players; z++) {
 
-			let pid = tp.peek_int(info_index + 0);
 			let ships = tp.peek_int(info_index + 1);
 			let dropoffs = tp.peek_int(info_index + 2);
 
@@ -238,6 +254,7 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
+		renderer.game.reset_stats();
 		renderer.game.ships = [];
 
 		// Clear the dropoffs but save the factories...
@@ -261,6 +278,8 @@ function make_renderer() {
 				let halite = tp.int();
 
 				renderer.game.ships.push(make_ship(pid, sid, x, y, halite));
+				renderer.game.carried[pid] += halite;
+				renderer.game.shipcounts[pid] += 1;
 			}
 
 			for (let i = 0; i < dropoffs; i++) {
@@ -560,8 +579,32 @@ function make_renderer() {
 	// --------------------------------------------------------------
 
 	renderer.write_infobox = () => {
+
 		let lines = [];
-		lines.push(`<p>TODO...</p>`);
+
+		let turn_fudge = renderer.prefs.turns_start_at_one ? 1 : 0;
+
+		lines.push(`<p class="lowlight">Turn ${renderer.game.turn + turn_fudge}</p>`);
+
+		for (let pid = 0; pid < renderer.game.players; pid++) {
+
+			let budget = renderer.game.budgets[pid];
+			let shipcount = renderer.game.shipcounts[pid];
+			let carried = renderer.game.carried[pid];
+
+			let c = `<span class="player-${pid}-colour">`;
+			let z = `</span>`;
+
+			lines.push(`
+				<h2 class="player-${pid}-colour">${names[pid]}</h2>
+				<ul>
+					<li>Ships: ${c}${shipcount}${z}</li>
+					<li>Carrying: ${c}${carried}${z}</li>
+					<li>Budget: ${c}${budget}${z}</li>
+				</ul>`
+			);
+		}
+
 		infobox.innerHTML = lines.join("");
 	};
 
