@@ -4,3 +4,5 @@ dist/
 *.exe
 *.py
 *.txt
+flogs/*
+logs/*

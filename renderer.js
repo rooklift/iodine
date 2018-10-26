@@ -103,6 +103,8 @@ function make_renderer() {
 	renderer.offset_x = 0;
 	renderer.offset_y = 0;
 
+	renderer.last_draw = null;
+
 	renderer.prefs = read_prefs(app);
 
 	// --------------------------------------------------------------
@@ -182,12 +184,12 @@ function make_renderer() {
 			}
 		}
 
-		setTimeout(renderer.loop, 0);		// Eh, it's nice to clear the stack.
+		setTimeout(renderer.game_loop, 0);		// Eh, it's nice to clear the stack.
 	};
 
 	// --------------------------------------------------------------
 
-	renderer.loop = () => {
+	renderer.game_loop = () => {
 
 		// bare_min_tokens_needed is the absolute bare minimum number
 		// of tokens that might be capable of forming the frame, given
@@ -196,7 +198,7 @@ function make_renderer() {
 		let bare_min_tokens_needed = 1 + (renderer.game.players * 4) + 1;
 
 		if (tp.count() < bare_min_tokens_needed) {
-			setTimeout(renderer.loop, 1);
+			setTimeout(renderer.game_loop, 1);
 			return;
 		}
 
@@ -216,7 +218,7 @@ function make_renderer() {
 			bare_min_tokens_needed += dropoffs * 3;
 
 			if (tp.count() < bare_min_tokens_needed) {
-				setTimeout(renderer.loop, 1);
+				setTimeout(renderer.game_loop, 1);
 				return;
 			}
 
@@ -229,7 +231,7 @@ function make_renderer() {
 		bare_min_tokens_needed += map_updates * 3;
 
 		if (tp.count() < bare_min_tokens_needed) {
-			setTimeout(renderer.loop, 1);
+			setTimeout(renderer.game_loop, 1);
 			return;
 		}
 
@@ -284,9 +286,20 @@ function make_renderer() {
 
 		renderer.game.clean = true;
 
-		renderer.draw()
+		setTimeout(renderer.game_loop, 1);
+	};
 
-		setTimeout(renderer.loop, 1);
+	renderer.draw_loop = () => {
+
+		if (renderer.game.clean === false || renderer.game.turn === renderer.last_draw) {
+			setTimeout(renderer.draw_loop, 1);
+			return;
+		}
+
+		renderer.draw();
+		renderer.last_draw = renderer.game.turn;
+
+		setTimeout(renderer.draw_loop, 1);
 	};
 
 	// --------------------------------------------------------------
@@ -306,6 +319,7 @@ function make_renderer() {
 		let bots = settings.bots;
 		let seed = settings.seed;
 		let size = settings.size;
+		let replays = settings.replays;
 
 		let args = ["--viewer"];
 
@@ -319,6 +333,11 @@ function make_renderer() {
 			args.push(size.toString());
 			args.push("--height");
 			args.push(size.toString());
+		}
+
+		if (replays !== undefined && replays !== null && replays !== "") {
+			args.push("-i");
+			args.push(replays);
 		}
 
 		args = args.concat(bots);
@@ -336,6 +355,7 @@ function make_renderer() {
 		});
 
 		setTimeout(renderer.get_json_line, 0);
+		setTimeout(renderer.draw_loop, 0);
 	}
 
 	// --------------------------------------------------------------
