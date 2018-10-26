@@ -4,9 +4,6 @@
 	"version": "0.1.0",
 	"author": "Fohristiwhirl",
 	"main": "main.js",
-	"dependencies": {
-		"readline-sync": "^1.4.9"
-	},
 	"scripts": {
 		"pack": "electron-builder --dir",
 		"start": "electron ."
