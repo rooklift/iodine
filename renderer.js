@@ -46,16 +46,17 @@ function make_token_parser() {
 	return o;
 }
 
-function make_dropoff(pid, x, y, factory_flag) {
+function make_dropoff(pid, sid, x, y, factory_flag) {
 	let dropoff = Object.create(null);
 	dropoff.pid = pid;
+	dropoff.sid = sid;
 	dropoff.x = x;
 	dropoff.y = y;
 	dropoff.factory = factory_flag;
 	return dropoff;
 }
 
-function make_ship(pid, sid, x, y, halite, direction) {
+function make_ship(pid, sid, x, y, halite, direction, time_seen) {
 	let ship = Object.create(null);
 	ship.pid = pid;
 	ship.sid = sid;
@@ -63,6 +64,7 @@ function make_ship(pid, sid, x, y, halite, direction) {
 	ship.y = y;
 	ship.halite = halite;
 	ship.direction = direction;
+	ship.time_seen = time_seen;
 	return ship;
 }
 
@@ -79,7 +81,7 @@ function make_game() {
 	game.turn = null;
 
 	game.ships = Object.create(null);
-	game.dropoffs = [];
+	game.dropoffs = Object.create(null);
 	game.halite = null;
 
 	game.init = () => {
@@ -162,10 +164,11 @@ function make_renderer() {
 
 		for (let n = 0; n < renderer.game.players; n++) {
 			let pid = tp.int();
+			let sid = -1000 - n;	// Any unique value not used by real dropoffs
 			let x = tp.int();
 			let y = tp.int();
-			let factory = make_dropoff(pid, x, y, true);
-			renderer.game.dropoffs.push(factory);
+			let factory = make_dropoff(pid, sid, x, y, true);
+			renderer.game.dropoffs[sid] = factory;
 		}
 
 		renderer.parse_width_height();
@@ -254,13 +257,7 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
-		let old_ships = renderer.game.ships;
-
 		renderer.game.reset_stats();
-		renderer.game.ships = Object.create(null);
-
-		// Clear the dropoffs but save the factories...
-		renderer.game.dropoffs = renderer.game.dropoffs.slice(0, renderer.game.players);
 
 		renderer.game.turn = tp.int();
 
@@ -279,29 +276,47 @@ function make_renderer() {
 				let y = tp.int();
 				let halite = tp.int();
 
-				let old = old_ships[sid];
+				let ship = renderer.game.ships[sid];
 
-				let direction = "";
+				if (ship === undefined) {
+					renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, "", renderer.game.turn);
+				} else {
+					ship.direction = ""
+					if (ship.x < x) ship.direction = "e";
+					if (ship.x > x) ship.direction = "w";
+					if (ship.y < y) ship.direction = "s";
+					if (ship.y > y) ship.direction = "n";
 
-				if (old) {
-					if (old.x < x) direction = "e";
-					if (old.x > x) direction = "w";
-					if (old.y < y) direction = "s";
-					if (old.y > y) direction = "n";
+					ship.pid = pid;		// Could change if captures enabled.
+					ship.x = x;
+					ship.y = y;
+					ship.halite = halite;
+					ship.time_seen = renderer.game.turn;
 				}
 
-				renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, direction);
 				renderer.game.carried[pid] += halite;
 				renderer.game.shipcounts[pid] += 1;
 			}
 
 			for (let i = 0; i < dropoffs; i++) {
 
-				tp.int();			// sid
+				let sid = tp.int();
 				let x = tp.int();
 				let y = tp.int();
 
-				renderer.game.dropoffs.push(make_dropoff(pid, x, y));
+				let dropoff = renderer.game.dropoffs[sid];
+
+				if (dropoff === undefined) {
+					renderer.game.dropoffs[sid] = make_dropoff(pid, sid, x, y);
+				}
+			}
+		}
+
+		// Delete dead ships...
+
+		for (let ship of Object.values(renderer.game.ships)) {
+			if (ship.time_seen !== renderer.game.turn) {
+				delete renderer.game.ships[ship.sid];
 			}
 		}
 
@@ -519,7 +534,7 @@ function make_renderer() {
 		let box_width = renderer.box_width();
 		let box_height = renderer.box_height();
 
-		for (let dropoff of renderer.game.dropoffs) {
+		for (let dropoff of Object.values(renderer.game.dropoffs)) {
 
 			let x = dropoff.x;
 			let y = dropoff.y;
