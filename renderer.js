@@ -55,14 +55,14 @@ function make_dropoff(pid, x, y, factory_flag) {
 	return dropoff;
 }
 
-function make_ship(pid, sid, x, y, halite) {
+function make_ship(pid, sid, x, y, halite, direction) {
 	let ship = Object.create(null);
 	ship.pid = pid;
 	ship.sid = sid;
 	ship.x = x;
 	ship.y = y;
 	ship.halite = halite;
-	ship.last_move = "";
+	ship.direction = direction;
 	return ship;
 }
 
@@ -78,7 +78,7 @@ function make_game() {
 	game.height = null;
 	game.turn = null;
 
-	game.ships = [];
+	game.ships = Object.create(null);
 	game.dropoffs = [];
 	game.halite = null;
 
@@ -254,8 +254,10 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
+		let old_ships = renderer.game.ships;
+
 		renderer.game.reset_stats();
-		renderer.game.ships = [];
+		renderer.game.ships = Object.create(null);
 
 		// Clear the dropoffs but save the factories...
 		renderer.game.dropoffs = renderer.game.dropoffs.slice(0, renderer.game.players);
@@ -277,7 +279,18 @@ function make_renderer() {
 				let y = tp.int();
 				let halite = tp.int();
 
-				renderer.game.ships.push(make_ship(pid, sid, x, y, halite));
+				let old = old_ships[sid];
+
+				let direction = "";
+
+				if (old) {
+					if (old.x < x) direction = "e";
+					if (old.x > x) direction = "w";
+					if (old.y < y) direction = "s";
+					if (old.y > y) direction = "n";
+				}
+
+				renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, direction);
 				renderer.game.carried[pid] += halite;
 				renderer.game.shipcounts[pid] += 1;
 			}
@@ -523,7 +536,7 @@ function make_renderer() {
 		let box_width = renderer.box_width();
 		let box_height = renderer.box_height();
 
-		for (let ship of renderer.game.ships) {
+		for (let ship of Object.values(renderer.game.ships)) {
 
 			let pid = ship.pid;
 			let x = ship.x;
@@ -539,15 +552,76 @@ function make_renderer() {
 			let c = 1 - a;
 
 			context.strokeStyle = colour;
-			context.beginPath();
-			context.arc((i + b) * box_width, (j + b) * box_height, 0.35 * box_width, 0, 2 * Math.PI, false);
-			context.fillStyle = "#000000";
-			context.fill();
-			context.globalAlpha = opacity;
-			context.fillStyle = colour;
-			context.fill();
-			context.globalAlpha = 1;
-			context.stroke();
+
+			switch (ship.direction) {
+
+			case "n":
+				context.beginPath();
+				context.moveTo((i + a) * box_width, (j + c) * box_height);
+				context.lineTo((i + c) * box_width, (j + c) * box_height);
+				context.lineTo((i + b) * box_width, (j + a) * box_height);
+				context.closePath();
+				context.fillStyle = "#000000";
+				context.fill();
+				context.globalAlpha = opacity;
+				context.fillStyle = colour;
+				context.fill();
+				context.globalAlpha = 1;
+				context.stroke();
+				break;
+			case "s":
+				context.beginPath();
+				context.moveTo((i + a) * box_width, (j + a) * box_height);
+				context.lineTo((i + c) * box_width, (j + a) * box_height);
+				context.lineTo((i + b) * box_width, (j + c) * box_height);
+				context.closePath();
+				context.fillStyle = "#000000";
+				context.fill();
+				context.globalAlpha = opacity;
+				context.fillStyle = colour;
+				context.fill();
+				context.globalAlpha = 1;
+				context.stroke();
+				break;
+			case "e":
+				context.beginPath();
+				context.moveTo((i + a) * box_width, (j + a) * box_height);
+				context.lineTo((i + a) * box_width, (j + c) * box_height);
+				context.lineTo((i + c) * box_width, (j + b) * box_height);
+				context.closePath();
+				context.fillStyle = "#000000";
+				context.fill();
+				context.globalAlpha = opacity;
+				context.fillStyle = colour;
+				context.fill();
+				context.globalAlpha = 1;
+				context.stroke();
+				break;
+			case "w":
+				context.beginPath();
+				context.moveTo((i + c) * box_width, (j + a) * box_height);
+				context.lineTo((i + c) * box_width, (j + c) * box_height);
+				context.lineTo((i + a) * box_width, (j + b) * box_height);
+				context.closePath();
+				context.fillStyle = "#000000";
+				context.fill();
+				context.globalAlpha = opacity;
+				context.fillStyle = colour;
+				context.fill();
+				context.globalAlpha = 1;
+				context.stroke();
+				break;
+			default:
+				context.beginPath();
+				context.arc((i + b) * box_width, (j + b) * box_height, 0.35 * box_width, 0, 2 * Math.PI, false);
+				context.fillStyle = "#000000";
+				context.fill();
+				context.globalAlpha = opacity;
+				context.fillStyle = colour;
+				context.fill();
+				context.globalAlpha = 1;
+				context.stroke();
+			}
 		}
 	};
 
