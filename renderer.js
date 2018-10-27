@@ -93,7 +93,6 @@ function make_game() {
 	game.clean = false;		// Can be rendered?
 
 	game.players = null;
-	game.pid = null;
 	game.width = null;
 	game.height = null;
 	game.turn = null;
@@ -189,7 +188,7 @@ function make_renderer() {
 		}
 
 		renderer.game.players = tp.int();
-		renderer.game.pid = tp.int();
+		tp.int();	// PID, not needed.
 
 		renderer.parse_factories();
 	};
