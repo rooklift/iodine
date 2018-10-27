@@ -722,7 +722,7 @@ function make_renderer() {
 		let free = renderer.game.free_halite;
 		let percentage = Math.floor(100 * renderer.game.free_halite / renderer.game.initial_free_halite);
 
-		lines.push(`<p class="lowlight">Seed: ${renderer.game.constants.game_seed}</p>`);
+		lines.push(`<p class="lowlight">Seed: ${renderer.game.constants.game_seed} (${renderer.game.width} x ${renderer.game.height})</p>`);
 		lines.push(`<p class="lowlight">Free halite: ${free} (${percentage}%)</p>`);
 		lines.push(`<p class="lowlight">Turn: <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
 
