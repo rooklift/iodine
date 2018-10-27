@@ -5,7 +5,7 @@
 	"author": "Fohristiwhirl",
 	"main": "main.js",
 	"scripts": {
-		"pack": "electron-builder --dir",
+		"pack": "electron-builder --dir"
 	},
 	"build": {
 		"asar": false
