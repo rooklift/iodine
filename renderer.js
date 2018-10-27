@@ -303,10 +303,11 @@ function make_renderer() {
 					renderer.game.build_counts[pid] += 1;
 				} else {
 					ship.direction = ""
-					if (ship.x < x) ship.direction = "e";
-					if (ship.x > x) ship.direction = "w";
-					if (ship.y < y) ship.direction = "s";
-					if (ship.y > y) ship.direction = "n";
+					// Note here that ship.x and ship.y are the old values...
+					if (ship.x < x) ship.direction = Math.abs(ship.x - x) === 1 ? "e" : "w";
+					if (ship.x > x) ship.direction = Math.abs(ship.x - x) === 1 ? "w" : "e";
+					if (ship.y < y) ship.direction = Math.abs(ship.y - y) === 1 ? "s" : "n";
+					if (ship.y > y) ship.direction = Math.abs(ship.y - y) === 1 ? "n" : "s";
 
 					ship.pid = pid;		// Could change if captures enabled.
 					ship.x = x;
