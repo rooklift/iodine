@@ -9,4 +9,4 @@ This is a realtime viewer for Halite 3 games. This is *work in progress*.
 * Then you can do `electron  ./iodine  bot.exe  "python somebot.py"  -s 123  --width 32  --height 32`
 * Tell me if it works
 
-![Iodine Screenshot](https://user-images.githubusercontent.com/16438795/47583947-c1647f00-d950-11e8-886a-ef63883642af.png)
+![Iodine Screenshot](https://user-images.githubusercontent.com/16438795/47602764-38def080-d9db-11e8-9a19-5a2a92d9f802.png)
