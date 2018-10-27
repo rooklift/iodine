@@ -98,6 +98,9 @@ function make_game() {
 	game.height = null;
 	game.turn = null;
 
+	game.free_halite = 0;
+	game.initial_free_halite = 0;
+
 	game.budgets = [];
 	game.ship_counts = [];
 	game.dropoff_counts = [];
@@ -239,8 +242,11 @@ function make_renderer() {
 		for (let y = 0; y < renderer.game.height; y++) {
 			for (let x = 0; x < renderer.game.width; x++) {
 				renderer.game.halite[x][y] = tp.int();
+				renderer.game.free_halite += renderer.game.halite[x][y];
 			}
 		}
+
+		renderer.game.initial_free_halite = renderer.game.free_halite;
 
 		setTimeout(renderer.game_loop, 0);		// Eh, it's nice to clear the stack.
 	};
@@ -369,6 +375,9 @@ function make_renderer() {
 			let x = tp.int();
 			let y = tp.int();
 			let val = tp.int();
+
+			renderer.game.free_halite -= renderer.game.halite[x][y];
+			renderer.game.free_halite += val;
 
 			renderer.game.halite[x][y] = val;
 		}
@@ -711,7 +720,11 @@ function make_renderer() {
 		let turn_fudge = renderer.prefs.turns_start_at_one ? 1 : 0;
 		let max_turns = renderer.game.constants.MAX_TURNS;
 
+		let free = renderer.game.free_halite;
+		let percentage = Math.floor(100 * renderer.game.free_halite / renderer.game.initial_free_halite);
+
 		lines.push(`<p class="lowlight">Seed: ${renderer.game.constants.game_seed}</p>`);
+		lines.push(`<p class="lowlight">Free halite: ${free} (${percentage}%)</p>`);
 		lines.push(`<p class="lowlight">Turn: <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
 
 		let all_pids = [];
