@@ -711,8 +711,8 @@ function make_renderer() {
 		let turn_fudge = renderer.prefs.turns_start_at_one ? 1 : 0;
 		let max_turns = renderer.game.constants.MAX_TURNS;
 
-		lines.push(`<p class="lowlight">Seed ${renderer.game.constants.game_seed}</p>`);
-		lines.push(`<p class="lowlight">Turn <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
+		lines.push(`<p class="lowlight">Seed: ${renderer.game.constants.game_seed}</p>`);
+		lines.push(`<p class="lowlight">Turn: <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
 
 		let all_pids = [];
 
