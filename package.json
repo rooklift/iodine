@@ -6,7 +6,6 @@
 	"main": "main.js",
 	"scripts": {
 		"pack": "electron-builder --dir",
-		"start": "electron ."
 	},
 	"build": {
 		"asar": false
