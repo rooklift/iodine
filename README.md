@@ -1,6 +1,6 @@
 # Iodine 🐢
 
-This is a realtime viewer for Halite 3 games. This is *work in progress*.
+This is a realtime viewer for Halite 3 games.
 
 * You will need Electron
 * You will need a recent version of the *[dubnium engine](https://github.com/fohristiwhirl/dubnium)* (a clone of Halite 3)
