@@ -3,6 +3,10 @@
 	"description": "Realtime viewer for Halite 3",
 	"version": "0.2.0",
 	"author": "Fohristiwhirl",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/fohristiwhirl/iodine"
+	},
 	"main": "main.js",
 	"scripts": {
 		"pack": "electron-builder --dir"
