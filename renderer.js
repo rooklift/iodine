@@ -9,7 +9,7 @@ const read_prefs = require("./modules/preferences").read_prefs;
 const readline = require("readline");
 
 const colours = ["#c5ec98", "#ff9999", "#ffbe00", "#66cccc"];
-const names = ["Zero", "One", "Two", "Three"];
+const names = ["Alfa", "Bravo", "Charlie", "Delta"];
 const explosion_colour = "#ff0000";
 
 const canvas = document.getElementById("canvas");
@@ -703,7 +703,7 @@ function make_renderer() {
 
 		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
 			all_pids.sort((a, b) => {
-				return renderer.game.budgets[a] - renderer.game.budgets[b];
+				return renderer.game.budgets[b] - renderer.game.budgets[a];
 			});
 		}
 
