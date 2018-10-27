@@ -38,6 +38,9 @@ electron.app.on("ready", () => {
 	main.once("ready-to-show", () => {
 		main.show();
 	});
+
+	let menu = make_main_menu();
+	electron.Menu.setApplicationMenu(menu);
 });
 
 // -------------------------------------------------------
@@ -60,3 +63,150 @@ ipcMain.on("renderer_ready", () => {
 
 	windows.send("renderer", "go", args);
 });
+
+// -------------------------------------------------------
+
+function make_main_menu() {
+	const template = [
+		{
+			label: "File",
+			submenu: [
+				{role: "reload"},
+				{
+					label: "About Iodine",
+					click: () => {
+						alert(about_message);
+					}
+				},
+				{
+					label: "Dev tools",
+					role: "toggledevtools"
+				},
+				{
+					accelerator: "CommandOrControl+Q",
+					role: "quit"
+				},
+			]
+		},
+		{
+			label: "View",
+			submenu: [
+				{
+					label: "Integer box sizes",
+					type: "checkbox",
+					checked: prefs.integer_box_sizes,
+					click: (menuItem) => {
+						set_pref("integer_box_sizes", menuItem.checked);
+					}
+				},
+				{
+					label: "Turns start at 1",
+					type: "checkbox",
+					checked: prefs.turns_start_at_one,
+					click: (menuItem) => {
+						set_pref("turns_start_at_one", menuItem.checked);
+					}
+				},
+				{
+					label: "Grid",
+					submenu: [
+						{
+							label: "0",
+							type: "radio",
+							accelerator: "F1",
+							checked: prefs.grid_aesthetic === 0,
+							click: () => {
+								set_pref("grid_aesthetic", 0);
+							}
+						},
+						{
+							label: "halite / 4",
+							type: "radio",
+							accelerator: "F2",
+							checked: prefs.grid_aesthetic === 1,
+							click: () => {
+								set_pref("grid_aesthetic", 1);
+							}
+						},
+						{
+							label: "255 * sqrt(halite / 2048)",
+							type: "radio",
+							accelerator: "F3",
+							checked: prefs.grid_aesthetic === 2,
+							click: () => {
+								set_pref("grid_aesthetic", 2);
+							}
+						},
+						{
+							label: "255 * sqrt(halite / 1024)",
+							type: "radio",
+							accelerator: "F4",
+							checked: prefs.grid_aesthetic === 3,
+							click: () => {
+								set_pref("grid_aesthetic", 3);
+							}
+						},
+					]
+				},
+				{
+					type: "separator"
+				},
+				{
+					label: "Up",
+					accelerator: "W",
+					click: () => {
+						windows.send("renderer", "down", 1);
+					}
+				},
+				{
+					label: "Left",
+					accelerator: "A",
+					click: () => {
+						windows.send("renderer", "right", 1);
+					}
+				},
+				{
+					label: "Down",
+					accelerator: "S",
+					click: () => {
+						windows.send("renderer", "down", -1);
+					}
+				},
+				{
+					label: "Right",
+					accelerator: "D",
+					click: () => {
+						windows.send("renderer", "right", -1);
+					}
+				},
+				{
+					label: "Reset camera",
+					accelerator: "R",
+					click: () => {
+						windows.send("renderer", "set", ["offset_x", 0]);
+						windows.send("renderer", "set", ["offset_y", 0]);
+					}
+				},
+				{
+					type: "separator"
+				},
+				{
+					label: "Font smaller",
+					accelerator: "CommandOrControl+-",
+					role: "zoomout"
+				},
+				{
+					label: "Font larger",
+					accelerator: "CommandOrControl+=",
+					role: "zoomin"
+				},
+				{
+					label: "Reset font",
+					role: "resetzoom"
+				},
+			]
+		},
+	];
+
+	return electron.Menu.buildFromTemplate(template);
+}

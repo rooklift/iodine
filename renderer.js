@@ -80,6 +80,12 @@ function make_game() {
 	game.height = null;
 	game.turn = null;
 
+	game.budgets = [];
+	game.ship_counts = [];
+	game.dropoff_counts = [];
+	game.build_counts = [];
+	game.carried = [];
+
 	game.constants = Object.create(null);
 	game.ships = Object.create(null);
 	game.dropoffs = Object.create(null);
@@ -96,19 +102,31 @@ function make_game() {
 			}
 		}
 
-		game.reset_stats();
+		for (let pid = 0; pid < game.players; pid++) {
+
+			// Live stats...
+
+			game.budgets.push(0);
+			game.ship_counts.push(0);
+			game.dropoff_counts.push(0);
+			game.carried.push(0);
+
+			// Cumulative stats...
+
+			game.build_counts.push(0);
+		}
 	}
 
-	game.reset_stats = () => {
+	game.reset_live_stats = () => {
 
-		game.budgets = [];
-		game.shipcounts = [];
-		game.carried = [];
+		// Live stats are the ones that only depend on the current frame,
+		// not cumulative / long term things.
 
 		for (let pid = 0; pid < game.players; pid++) {
-			game.budgets.push(0);
-			game.shipcounts.push(0);
-			game.carried.push(0);
+			game.budgets[pid] = 0;
+			game.ship_counts[pid] = 0;
+			game.dropoff_counts[pid] = 0;
+			game.carried[pid] = 0;
 		}
 	}
 
@@ -259,9 +277,9 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
-		renderer.game.reset_stats();
+		renderer.game.reset_live_stats();
 
-		renderer.game.turn = tp.int();
+		renderer.game.turn = tp.int() - 1;		// Turns start at 0 internally.
 
 		for (let n = 0; n < renderer.game.players; n++) {
 
@@ -282,6 +300,7 @@ function make_renderer() {
 
 				if (ship === undefined) {
 					renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, "", renderer.game.turn);
+					renderer.game.build_counts[pid] += 1;
 				} else {
 					ship.direction = ""
 					if (ship.x < x) ship.direction = "e";
@@ -297,7 +316,7 @@ function make_renderer() {
 				}
 
 				renderer.game.carried[pid] += halite;
-				renderer.game.shipcounts[pid] += 1;
+				renderer.game.ship_counts[pid] += 1;
 			}
 
 			for (let i = 0; i < dropoffs; i++) {
@@ -311,6 +330,8 @@ function make_renderer() {
 				if (dropoff === undefined) {
 					renderer.game.dropoffs[sid] = make_dropoff(pid, sid, x, y);
 				}
+
+				renderer.game.dropoff_counts[pid] += 1;
 			}
 		}
 
@@ -481,17 +502,27 @@ function make_renderer() {
 
 	renderer.draw = () => {
 
-		renderer.clear();
-
 		if (!renderer.game || !renderer.game.clean) {
 			return;
 		}
 
+		renderer.clear();
 		renderer.draw_grid();
 		renderer.draw_structures();
 		renderer.draw_ships();
 
 		renderer.write_infobox();
+	};
+
+	renderer.draw_if_finished = () => {
+
+		if (!renderer.game || !renderer.game.clean) {
+			return;
+		}
+
+		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
+			renderer.draw();
+		}
 	};
 
 	renderer.draw_grid = () => {
@@ -667,8 +698,10 @@ function make_renderer() {
 		for (let pid = 0; pid < renderer.game.players; pid++) {
 
 			let budget = renderer.game.budgets[pid];
-			let shipcount = renderer.game.shipcounts[pid];
+			let ships = renderer.game.ship_counts[pid];
+			let dropoffs = renderer.game.dropoff_counts[pid];
 			let carried = renderer.game.carried[pid];
+			let built = renderer.game.build_counts[pid];
 
 			let c = `<span class="player-${pid}-colour">`;
 			let z = `</span>`;
@@ -676,7 +709,8 @@ function make_renderer() {
 			lines.push(`
 				<h2 class="player-${pid}-colour">${names[pid]}</h2>
 				<ul>
-					<li>Ships: ${c}${shipcount}${z}</li>
+					<li>Ships: ${c}${ships}${z} / ${c}${built}${z}</li>
+					<li>Dropoffs: ${c}${dropoffs}${z}</li>
 					<li>Carrying: ${c}${carried}${z}</li>
 					<li>Budget: ${c}${budget}${z}</li>
 				</ul>`
@@ -719,6 +753,8 @@ ipcRenderer.on("receive", (event, msg) => {
 ipcRenderer.on("go", (event, args) => {
 	renderer.go(args);
 });
+
+window.addEventListener("resize", () => renderer.draw_if_finished());
 
 renderer.clear();
 
