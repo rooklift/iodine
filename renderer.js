@@ -458,7 +458,12 @@ function make_renderer() {
 		});
 
 		stderr_scanner.on("line", (line) => {
-			console.log("engine:", line);
+			if (line.includes("viewer_info") && line.includes("{") && line.includes("}")) {
+				let info = JSON.parse(line).viewer_info;
+				renderer.handle_info(info);
+			} else {
+				console.log("engine:", line);
+			}
 		});
 
 		setTimeout(renderer.get_json_line, 0);
@@ -480,6 +485,14 @@ function make_renderer() {
 	renderer.set = (attrname, value) => {
 		renderer[attrname] = value;
 		renderer.draw();
+	};
+
+	renderer.handle_info = (info) => {		// Can be expanded but watch for concurrency issues
+		if (info.names) {
+			for (let n = 0; n < info.names.length && n < names.length; n++) {
+				names[n] = info.names[n];
+			}
+		}
 	};
 
 	// --------------------------------------------------------------
@@ -811,4 +824,3 @@ renderer.clear();
 setTimeout(() => {
 	ipcRenderer.send("renderer_ready", null);
 }, 200);
-
