@@ -36,11 +36,29 @@ function make_token_parser() {
 	};
 
 	o.int = () => {
-		return parseInt(tokens.shift(), 10);
+
+		let raw = tokens.shift();
+		let val = parseInt(raw, 10);
+
+		if (Number.isNaN(val)) {
+			console.log("Token was not a number! This is bad!")
+			console.log(`Token was ${raw}`);
+		}
+
+		return val;
 	};
 
 	o.peek_int = (n) => {
-		return parseInt(tokens[n], 10);
+
+		let raw = tokens[n];
+		let val = parseInt(raw, 10);
+
+		if (Number.isNaN(val)) {
+			console.log("Token was not a number! This is bad!")
+			console.log(`Token was ${raw}`);
+		}
+
+		return val;
 	};
 
 	return o;
