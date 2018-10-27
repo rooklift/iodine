@@ -379,7 +379,7 @@ function make_renderer() {
 
 		// Note: our own process has already been stripped from args.
 
-		console.log("Got args: ", args.join(" "));
+		console.log("Got args:", args.join(" "));
 
 		let settings;
 
@@ -388,7 +388,7 @@ function make_renderer() {
 				let f = fs.readFileSync(path.join(__dirname, "settings.json"));
 				settings = JSON.parse(f);
 			} catch (err) {
-				console.log("Couldn't load settings: ", err.message);
+				console.log("Couldn't load settings:", err.message);
 				return;		// i.e. fail to start.
 			}
 		} else {
@@ -396,7 +396,7 @@ function make_renderer() {
 				let f = fs.readFileSync(path.join(__dirname, "settings.json.example"));
 				settings = JSON.parse(f);
 			} catch (err) {
-				console.log("Couldn't load settings: ", err.message);
+				console.log("Couldn't load settings:", err.message);
 				return;		// i.e. fail to start.
 			}
 		}
@@ -427,7 +427,7 @@ function make_renderer() {
 		});
 
 		stderr_scanner.on("line", (line) => {
-			console.log("engine: ", line);
+			console.log("engine:", line);
 		});
 
 		setTimeout(renderer.get_json_line, 0);
