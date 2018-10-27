@@ -695,7 +695,19 @@ function make_renderer() {
 		lines.push(`<p class="lowlight">Seed ${renderer.game.constants.game_seed}</p>`);
 		lines.push(`<p class="lowlight">Turn <span class="white-text">${renderer.game.turn + turn_fudge}</span> / ${max_turns}</p>`);
 
+		let all_pids = [];
+
 		for (let pid = 0; pid < renderer.game.players; pid++) {
+			all_pids.push(pid);
+		}
+
+		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
+			all_pids.sort((a, b) => {
+				return renderer.game.budgets[a] - renderer.game.budgets[b];
+			});
+		}
+
+		for (let pid of all_pids) {
 
 			let budget = renderer.game.budgets[pid];
 			let ships = renderer.game.ship_counts[pid];
