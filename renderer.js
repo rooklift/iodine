@@ -410,7 +410,7 @@ function make_renderer() {
 
 		// Note: our own process has already been stripped from args.
 
-		console.log("Got args:", args.join(" "));
+		console.log("Got args:", JSON.stringify(args));
 
 		let settings;
 
