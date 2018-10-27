@@ -383,6 +383,12 @@ function make_renderer() {
 
 		renderer.game.clean = true;
 
+		// Stupid hack to allow selecting the seed after the game...
+
+		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
+			document.body.style["user-select"] = "auto";
+		}
+
 		setTimeout(renderer.game_loop, 1);
 	};
 
