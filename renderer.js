@@ -285,7 +285,6 @@ function make_renderer() {
 			}
 
 			info_index += 4 + (ships * 4) + (dropoffs * 3);
-
 		}
 
 		let map_updates = tp.peek_int(info_index);
