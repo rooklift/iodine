@@ -10,7 +10,7 @@ const read_prefs = require("./modules/preferences").read_prefs;
 const save_prefs = require("./modules/preferences").save_prefs;
 const windows = require("./modules/windows");
 
-let about_message = `Iodine ${app.getVersion()} is a realtime replay viewer for Halite 3\n--\n` +
+let about_message = `Iodine ${app.getVersion()} is a realtime viewer for Halite 3\n--\n` +
 	`Electron ${process.versions.electron} + Node ${process.versions.node} + Chrome ${process.versions.chrome} + V8 ${process.versions.v8}`;
 
 // -------------------------------------------------------
