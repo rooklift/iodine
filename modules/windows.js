@@ -14,7 +14,16 @@ exports.new = (token, params = {}) => {		// token is an internal name for us to 
 		return;
 	}
 
-	let defaults = {title: "Title", show: true, width: 600, height: 400, resizable: true, page: path.join(__dirname, "index.html")};
+	let defaults = {
+		title: "Title",
+		show: true,
+		width: 600,
+		height: 400,
+		throttle: true,
+		resizable: true,
+		page: path.join(__dirname, "index.html")
+	};
+
 	assign_without_overwrite(params, defaults);
 
 	// The screen may be zoomed, we can compensate...
@@ -29,7 +38,10 @@ exports.new = (token, params = {}) => {		// token is an internal name for us to 
 		backgroundColor: "#000000",
 		useContentSize: true,
 		resizable: params.resizable,
-		webPreferences: { zoomFactor: zoom_factor }
+		webPreferences: {
+			backgroundThrottling: params.throttle,
+			zoomFactor: zoom_factor
+		}
 	});
 
 	win.loadURL(url.format({
