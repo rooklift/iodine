@@ -22,15 +22,20 @@ function make_token_parser() {
 
 	let tokens = [];		// Private
 
+	o.total_count = 0;
+
 	o.receive = (line) => {
 
 		// The app can hang if this method is slow. Speed matters here.
 
 		let new_tokens = line.split(" ");
 		let length = new_tokens.length;
+
 		for (let n = 0; n < length; n++) {
 			tokens.push(new_tokens[n]);
 		}
+
+		o.total_count += length;
 	};
 
 	o.count = () => {
@@ -388,11 +393,16 @@ function make_renderer() {
 
 		renderer.game.clean = true;
 
-		// Stupid hack to allow selecting the seed after the game...
-
 		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
+
+			// Allow selecting the seed after the game...
 			document.body.style["user-select"] = "auto";
+
+			// How many tokens did the reader get? Interesting stat...
+			console.log(`Game over. Token reader received ${tp.total_count} tokens.`);
 		}
+
+
 
 		setTimeout(renderer.game_loop, 1);
 	};
