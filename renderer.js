@@ -252,14 +252,21 @@ function make_renderer() {
 
 		renderer.game.init();
 
+		let ti = 0;		// token index, so we can peek instead of using slow tp.int()
+
 		for (let y = 0; y < renderer.game.height; y++) {
 			for (let x = 0; x < renderer.game.width; x++) {
-				renderer.game.halite[x][y] = tp.int();
+				renderer.game.halite[x][y] = tp.peek_int(ti++);
 				renderer.game.free_halite += renderer.game.halite[x][y];
 			}
 		}
 
 		renderer.game.initial_free_halite = renderer.game.free_halite;
+
+		// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
+		// Now we must tell the token parser to cut its list of tokens to remove the used ones.
+
+		tp.cut(ti);
 
 		setTimeout(renderer.game_loop, 0);		// Eh, it's nice to clear the stack.
 	};
