@@ -10,7 +10,6 @@ const readline = require("readline");
 
 const colours = ["#c5ec98", "#ff9999", "#ffbe00", "#66cccc"];
 const names = ["Alfa", "Bravo", "Charlie", "Delta"];
-const explosion_colour = "#ff0000";
 
 const canvas = document.getElementById("canvas");
 const infobox = document.getElementById("infobox");
@@ -52,7 +51,7 @@ function make_token_parser() {
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
-			console.log("Token was not a number! This is bad!")
+			console.log("Token was not a number! This is bad!");
 			console.log(`Token was ${raw}`);
 		}
 
@@ -65,7 +64,7 @@ function make_token_parser() {
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
-			console.log("Token was not a number! This is bad!")
+			console.log("Token was not a number! This is bad!");
 			console.log(`Token was ${raw}`);
 		}
 
@@ -150,7 +149,7 @@ function make_game() {
 
 			game.build_counts.push(0);
 		}
-	}
+	};
 
 	game.reset_live_stats = () => {
 
@@ -163,7 +162,7 @@ function make_game() {
 			game.dropoff_counts[pid] = 0;
 			game.carried[pid] = 0;
 		}
-	}
+	};
 
 	return game;
 }
@@ -341,7 +340,7 @@ function make_renderer() {
 					renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, "", renderer.game.turn);
 					renderer.game.build_counts[pid] += 1;
 				} else {
-					ship.direction = ""
+					ship.direction = "";
 					// Note here that ship.x and ship.y are the old values...
 					if (ship.x < x) ship.direction = Math.abs(ship.x - x) === 1 ? "e" : "w";
 					if (ship.x > x) ship.direction = Math.abs(ship.x - x) === 1 ? "w" : "e";
@@ -493,7 +492,7 @@ function make_renderer() {
 
 		setTimeout(renderer.get_json_line, 0);
 		setTimeout(renderer.draw_loop, 0);
-	}
+	};
 
 	// --------------------------------------------------------------
 
