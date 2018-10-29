@@ -23,8 +23,14 @@ function make_token_parser() {
 	let tokens = [];		// Private
 
 	o.receive = (line) => {
-		let new_tokens = line.split(" ").map(s => s.trim()).filter(t => t.length > 0);
-		tokens = tokens.concat(new_tokens);
+
+		// The app can hang if this method is slow. Speed matters here.
+
+		let new_tokens = line.split(" ");
+		let length = new_tokens.length;
+		for (let n = 0; n < length; n++) {
+			tokens.push(new_tokens[n]);
+		}
 	};
 
 	o.count = () => {
