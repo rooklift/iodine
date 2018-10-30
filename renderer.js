@@ -476,7 +476,7 @@ function make_renderer() {
 
 		let sleep = settings.sleep;
 		if (sleep === undefined || sleep < 0) {
-			sleep = 0;
+			sleep = 10;
 		}
 		if (sleep < 10) {
 			console.log(`Very low sleep value (${sleep}) -- this is not recommended`);
