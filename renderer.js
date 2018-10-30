@@ -17,13 +17,11 @@ const context = canvas.getContext("2d");
 
 function make_token_parser() {
 
-	// For speed reasons, this deliberately never discards tokens,
-	// but keeps them in memory "forever".
-
 	let o = Object.create(null);
 
 	let tokens = [];		// Private
-	let cut = 0;			// Private - where our logical array starts
+
+	o.total_count = 0;
 
 	o.receive = (line) => {
 
@@ -35,23 +33,21 @@ function make_token_parser() {
 		for (let n = 0; n < length; n++) {
 			tokens.push(new_tokens[n]);
 		}
+
+		o.total_count += length;
 	};
 
 	o.count = () => {
-		return tokens.length - cut;
-	};
-
-	o.total_count = () => {
 		return tokens.length;
 	};
 
 	o.token = () => {
-		return tokens[cut++];
+		return tokens.shift();
 	};
 
 	o.int = () => {
 
-		let raw = tokens[cut++];
+		let raw = tokens.shift();			// This can be slow if the array gets very large.
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
@@ -64,7 +60,7 @@ function make_token_parser() {
 
 	o.peek_int = (n) => {
 
-		let raw = tokens[n + cut];
+		let raw = tokens[n];
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
@@ -73,6 +69,10 @@ function make_token_parser() {
 		}
 
 		return val;
+	};
+
+	o.cut = (n) => {
+		tokens = tokens.slice(n);
 	};
 
 	return o;
@@ -252,14 +252,21 @@ function make_renderer() {
 
 		renderer.game.init();
 
+		let ti = 0;		// token index, so we can peek instead of using slow tp.int()
+
 		for (let y = 0; y < renderer.game.height; y++) {
 			for (let x = 0; x < renderer.game.width; x++) {
-				renderer.game.halite[x][y] = tp.int();
+				renderer.game.halite[x][y] = tp.peek_int(ti++);
 				renderer.game.free_halite += renderer.game.halite[x][y];
 			}
 		}
 
 		renderer.game.initial_free_halite = renderer.game.free_halite;
+
+		// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
+		// Now we must tell the token parser to cut its list of tokens to remove the used ones.
+
+		tp.cut(ti);
 
 		setTimeout(renderer.game_loop, 0);		// Eh, it's nice to clear the stack.
 	};
@@ -313,24 +320,26 @@ function make_renderer() {
 		// --------------------
 		// The tokens exist!
 
+		let ti = 0;		// Token index. To avoid many expensive shift ops, we just use tp.peek_int()
+
 		renderer.game.reset_live_stats();
 
-		renderer.game.turn = tp.int() - 1;		// Turns start at 0 internally.
+		renderer.game.turn = tp.peek_int(ti++) - 1;		// Turns start at 0 internally.
 
 		for (let n = 0; n < renderer.game.players; n++) {
 
-			let pid = tp.int();
-			let ships = tp.int();
-			let dropoffs = tp.int();
+			let pid = tp.peek_int(ti++);
+			let ships = tp.peek_int(ti++);
+			let dropoffs = tp.peek_int(ti++);
 
-			renderer.game.budgets[pid] = tp.int();
+			renderer.game.budgets[pid] = tp.peek_int(ti++);
 
 			for (let i = 0; i < ships; i++) {
 
-				let sid = tp.int();
-				let x = tp.int();
-				let y = tp.int();
-				let halite = tp.int();
+				let sid = tp.peek_int(ti++);
+				let x = tp.peek_int(ti++);
+				let y = tp.peek_int(ti++);
+				let halite = tp.peek_int(ti++);
 
 				let ship = renderer.game.ships[sid];
 
@@ -358,9 +367,9 @@ function make_renderer() {
 
 			for (let i = 0; i < dropoffs; i++) {
 
-				let sid = tp.int();
-				let x = tp.int();
-				let y = tp.int();
+				let sid = tp.peek_int(ti++);
+				let x = tp.peek_int(ti++);
+				let y = tp.peek_int(ti++);
 
 				let dropoff = renderer.game.dropoffs[sid];
 
@@ -380,13 +389,13 @@ function make_renderer() {
 			}
 		}
 
-		map_updates = tp.int();
+		map_updates = tp.peek_int(ti++);
 
 		for (let n = 0; n < map_updates; n++) {
 
-			let x = tp.int();
-			let y = tp.int();
-			let val = tp.int();
+			let x = tp.peek_int(ti++);
+			let y = tp.peek_int(ti++);
+			let val = tp.peek_int(ti++);
 
 			renderer.game.free_halite -= renderer.game.halite[x][y];
 			renderer.game.free_halite += val;
@@ -402,8 +411,13 @@ function make_renderer() {
 			document.body.style["user-select"] = "auto";
 
 			// How many tokens did the reader get? Interesting stat...
-			console.log(`Game over. Token reader received ${tp.total_count()} tokens.`);
+			console.log(`Game over. Token reader received ${tp.total_count} tokens.`);
 		}
+
+		// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
+		// Now we must tell the token parser to cut its list of tokens to remove the used ones.
+
+		tp.cut(ti);
 
 		setTimeout(renderer.game_loop, 1);
 	};
