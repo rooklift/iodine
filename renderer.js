@@ -191,6 +191,12 @@ function make_renderer() {
 		let raw = tp.token();
 		renderer.game.constants = JSON.parse(raw);
 
+		let width = renderer.game.constants.DEFAULT_MAP_WIDTH;
+		let height = renderer.game.constants.DEFAULT_MAP_HEIGHT;
+		let seed = renderer.game.constants.game_seed;
+
+		console.log(`New game: ${width} x ${height} -- seed ${seed}`);
+
 		renderer.pre_parse();
 	};
 
@@ -411,7 +417,7 @@ function make_renderer() {
 			document.body.style["user-select"] = "auto";
 
 			// How many tokens did the reader get? Interesting stat...
-			console.log(`Game over. Token reader received ${tp.total_count} tokens.`);
+			console.log(`Game over -- token reader received ${tp.total_count} tokens`);
 		}
 
 		// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
@@ -493,7 +499,7 @@ function make_renderer() {
 				let info = JSON.parse(line).viewer_info;
 				renderer.handle_info(info);
 			} else {
-				console.log("engine:", line);
+				console.log("Engine:", line);
 			}
 		});
 
