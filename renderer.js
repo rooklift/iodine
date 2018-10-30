@@ -474,10 +474,15 @@ function make_renderer() {
 
 		args = ["--viewer"].concat(args);
 
-		if (settings.sleep && settings.sleep > 0) {
-			args.push("--sleep");
-			args.push(settings.sleep.toString());
+		let sleep = settings.sleep;
+		if (sleep === undefined || sleep < 0) {
+			sleep = 0;
 		}
+		if (sleep < 10) {
+			console.log(`Very low sleep value (${sleep}) -- this is not recommended`);
+		}
+		args.push("--sleep");
+		args.push(sleep.toString());
 
 		let exe = child_process.spawn(settings.engine, args);
 
