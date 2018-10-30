@@ -281,151 +281,154 @@ function make_renderer() {
 
 	renderer.game_loop = () => {
 
-		// bare_min_tokens_needed is the absolute bare minimum number
-		// of tokens that might be capable of forming the frame, given
-		// what we actually know. It is updated as we gain more info.
+		// Read tokens until we can't form a new frame...
 
-		let bare_min_tokens_needed = 1 + (renderer.game.players * 4) + 1;
+		while (1) {
 
-		if (tp.count() < bare_min_tokens_needed) {
-			setTimeout(renderer.game_loop, 1);
-			return;
-		}
+			// bare_min_tokens_needed is the absolute bare minimum number
+			// of tokens that might be capable of forming the frame, given
+			// what we actually know. It is updated as we gain more info.
 
-		// --------------------
-
-		let info_index = 1;		// Start of the first player in the stream.
-
-		for (let z = 0; z < renderer.game.players; z++) {
-
-			let ships = tp.peek_int(info_index + 1);
-			let dropoffs = tp.peek_int(info_index + 2);
-
-			// Update our bare minimums and check...
-
-			bare_min_tokens_needed += ships * 4;
-			bare_min_tokens_needed += dropoffs * 3;
+			let bare_min_tokens_needed = 1 + (renderer.game.players * 4) + 1;
 
 			if (tp.count() < bare_min_tokens_needed) {
 				setTimeout(renderer.game_loop, 1);
 				return;
 			}
 
-			info_index += 4 + (ships * 4) + (dropoffs * 3);
-		}
+			// --------------------
 
-		let map_updates = tp.peek_int(info_index);
+			let info_index = 1;		// Start of the first player in the stream.
 
-		bare_min_tokens_needed += map_updates * 3;
+			for (let z = 0; z < renderer.game.players; z++) {
 
-		if (tp.count() < bare_min_tokens_needed) {
-			setTimeout(renderer.game_loop, 1);
-			return;
-		}
+				let ships = tp.peek_int(info_index + 1);
+				let dropoffs = tp.peek_int(info_index + 2);
 
-		// --------------------
-		// The tokens exist!
+				// Update our bare minimums and check...
 
-		let ti = 0;		// Token index. To avoid many expensive shift ops, we just use tp.peek_int()
+				bare_min_tokens_needed += ships * 4;
+				bare_min_tokens_needed += dropoffs * 3;
 
-		renderer.game.reset_live_stats();
-
-		renderer.game.turn = tp.peek_int(ti++) - 1;		// Turns start at 0 internally.
-
-		for (let n = 0; n < renderer.game.players; n++) {
-
-			let pid = tp.peek_int(ti++);
-			let ships = tp.peek_int(ti++);
-			let dropoffs = tp.peek_int(ti++);
-
-			renderer.game.budgets[pid] = tp.peek_int(ti++);
-
-			for (let i = 0; i < ships; i++) {
-
-				let sid = tp.peek_int(ti++);
-				let x = tp.peek_int(ti++);
-				let y = tp.peek_int(ti++);
-				let halite = tp.peek_int(ti++);
-
-				let ship = renderer.game.ships[sid];
-
-				if (ship === undefined) {
-					renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, "", renderer.game.turn);
-					renderer.game.build_counts[pid] += 1;
-				} else {
-					ship.direction = "";
-					// Note here that ship.x and ship.y are the old values...
-					if (ship.x < x) ship.direction = Math.abs(ship.x - x) === 1 ? "e" : "w";
-					if (ship.x > x) ship.direction = Math.abs(ship.x - x) === 1 ? "w" : "e";
-					if (ship.y < y) ship.direction = Math.abs(ship.y - y) === 1 ? "s" : "n";
-					if (ship.y > y) ship.direction = Math.abs(ship.y - y) === 1 ? "n" : "s";
-
-					ship.pid = pid;		// Could change if captures enabled.
-					ship.x = x;
-					ship.y = y;
-					ship.halite = halite;
-					ship.time_seen = renderer.game.turn;
+				if (tp.count() < bare_min_tokens_needed) {
+					setTimeout(renderer.game_loop, 1);
+					return;
 				}
 
-				renderer.game.carried[pid] += halite;
-				renderer.game.ship_counts[pid] += 1;
+				info_index += 4 + (ships * 4) + (dropoffs * 3);
 			}
 
-			for (let i = 0; i < dropoffs; i++) {
+			let map_updates = tp.peek_int(info_index);
 
-				let sid = tp.peek_int(ti++);
-				let x = tp.peek_int(ti++);
-				let y = tp.peek_int(ti++);
+			bare_min_tokens_needed += map_updates * 3;
 
-				let dropoff = renderer.game.dropoffs[sid];
+			if (tp.count() < bare_min_tokens_needed) {
+				setTimeout(renderer.game_loop, 1);
+				return;
+			}
 
-				if (dropoff === undefined) {
-					renderer.game.dropoffs[sid] = make_dropoff(pid, sid, x, y);
+			// --------------------
+			// The tokens exist!
+
+			let ti = 0;		// Token index. To avoid many expensive shift ops, we just use tp.peek_int()
+
+			renderer.game.reset_live_stats();
+
+			renderer.game.turn = tp.peek_int(ti++) - 1;		// Turns start at 0 internally.
+
+			for (let n = 0; n < renderer.game.players; n++) {
+
+				let pid = tp.peek_int(ti++);
+				let ships = tp.peek_int(ti++);
+				let dropoffs = tp.peek_int(ti++);
+
+				renderer.game.budgets[pid] = tp.peek_int(ti++);
+
+				for (let i = 0; i < ships; i++) {
+
+					let sid = tp.peek_int(ti++);
+					let x = tp.peek_int(ti++);
+					let y = tp.peek_int(ti++);
+					let halite = tp.peek_int(ti++);
+
+					let ship = renderer.game.ships[sid];
+
+					if (ship === undefined) {
+						renderer.game.ships[sid] = make_ship(pid, sid, x, y, halite, "", renderer.game.turn);
+						renderer.game.build_counts[pid] += 1;
+					} else {
+						ship.direction = "";
+						// Note here that ship.x and ship.y are the old values...
+						if (ship.x < x) ship.direction = Math.abs(ship.x - x) === 1 ? "e" : "w";
+						if (ship.x > x) ship.direction = Math.abs(ship.x - x) === 1 ? "w" : "e";
+						if (ship.y < y) ship.direction = Math.abs(ship.y - y) === 1 ? "s" : "n";
+						if (ship.y > y) ship.direction = Math.abs(ship.y - y) === 1 ? "n" : "s";
+
+						ship.pid = pid;		// Could change if captures enabled.
+						ship.x = x;
+						ship.y = y;
+						ship.halite = halite;
+						ship.time_seen = renderer.game.turn;
+					}
+
+					renderer.game.carried[pid] += halite;
+					renderer.game.ship_counts[pid] += 1;
 				}
 
-				renderer.game.dropoff_counts[pid] += 1;
+				for (let i = 0; i < dropoffs; i++) {
+
+					let sid = tp.peek_int(ti++);
+					let x = tp.peek_int(ti++);
+					let y = tp.peek_int(ti++);
+
+					let dropoff = renderer.game.dropoffs[sid];
+
+					if (dropoff === undefined) {
+						renderer.game.dropoffs[sid] = make_dropoff(pid, sid, x, y);
+					}
+
+					renderer.game.dropoff_counts[pid] += 1;
+				}
 			}
-		}
 
-		// Delete dead ships...
+			// Delete dead ships...
 
-		for (let ship of Object.values(renderer.game.ships)) {
-			if (ship.time_seen !== renderer.game.turn) {
-				delete renderer.game.ships[ship.sid];
+			for (let ship of Object.values(renderer.game.ships)) {
+				if (ship.time_seen !== renderer.game.turn) {
+					delete renderer.game.ships[ship.sid];
+				}
 			}
+
+			map_updates = tp.peek_int(ti++);
+
+			for (let n = 0; n < map_updates; n++) {
+
+				let x = tp.peek_int(ti++);
+				let y = tp.peek_int(ti++);
+				let val = tp.peek_int(ti++);
+
+				renderer.game.free_halite -= renderer.game.halite[x][y];
+				renderer.game.free_halite += val;
+
+				renderer.game.halite[x][y] = val;
+			}
+
+			renderer.game.clean = true;
+
+			if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
+
+				// Allow selecting the seed after the game...
+				document.body.style["user-select"] = "auto";
+
+				// How many tokens did the reader get? Interesting stat...
+				console.log(`Game over -- token reader received ${tp.total_count} tokens`);
+			}
+
+			// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
+			// Now we must tell the token parser to cut its list of tokens to remove the used ones.
+
+			tp.cut(ti);
 		}
-
-		map_updates = tp.peek_int(ti++);
-
-		for (let n = 0; n < map_updates; n++) {
-
-			let x = tp.peek_int(ti++);
-			let y = tp.peek_int(ti++);
-			let val = tp.peek_int(ti++);
-
-			renderer.game.free_halite -= renderer.game.halite[x][y];
-			renderer.game.free_halite += val;
-
-			renderer.game.halite[x][y] = val;
-		}
-
-		renderer.game.clean = true;
-
-		if (renderer.game.turn === renderer.game.constants.MAX_TURNS) {
-
-			// Allow selecting the seed after the game...
-			document.body.style["user-select"] = "auto";
-
-			// How many tokens did the reader get? Interesting stat...
-			console.log(`Game over -- token reader received ${tp.total_count} tokens`);
-		}
-
-		// For speed reasons we used tp.peek_int() instead of tp.int() (which causes a shift).
-		// Now we must tell the token parser to cut its list of tokens to remove the used ones.
-
-		tp.cut(ti);
-
-		setTimeout(renderer.game_loop, 1);
 	};
 
 	renderer.draw_loop = () => {
