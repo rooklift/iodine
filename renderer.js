@@ -19,7 +19,7 @@ function make_token_parser() {
 
 	let o = Object.create(null);
 
-	let tokens = [];		// Private
+	o.__tokens = [];		// I did use a private closure, but this may be faster (??)
 
 	o.total_count = 0;
 
@@ -31,23 +31,23 @@ function make_token_parser() {
 		let length = new_tokens.length;
 
 		for (let n = 0; n < length; n++) {
-			tokens.push(new_tokens[n]);
+			o.__tokens.push(new_tokens[n]);
 		}
 
 		o.total_count += length;
 	};
 
 	o.count = () => {
-		return tokens.length;
+		return o.__tokens.length;
 	};
 
 	o.token = () => {
-		return tokens.shift();
+		return o.__tokens.shift();
 	};
 
 	o.int = () => {
 
-		let raw = tokens.shift();			// This can be slow if the array gets very large.
+		let raw = o.__tokens.shift();			// This can be slow if the array gets very large.
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
@@ -60,7 +60,7 @@ function make_token_parser() {
 
 	o.peek_int = (n) => {
 
-		let raw = tokens[n];
+		let raw = o.__tokens[n];
 		let val = parseInt(raw, 10);
 
 		if (Number.isNaN(val)) {
@@ -72,7 +72,7 @@ function make_token_parser() {
 	};
 
 	o.cut = (n) => {
-		tokens = tokens.slice(n);
+		o.__tokens = o.__tokens.slice(n);
 	};
 
 	return o;
