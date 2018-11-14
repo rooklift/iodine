@@ -19,7 +19,7 @@ function make_token_parser() {
 
 	let o = Object.create(null);
 
-	o.__tokens = [];		// I did use a private closure, but this may be faster (??)
+	o.__tokens = [];		// I did use a private variable, but this may be faster (??)
 
 	o.total_count = 0;
 
